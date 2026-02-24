@@ -1,0 +1,10 @@
+# Ignore these files and directories
+
+logic_reports
+reasoning_graphs
+atomic_output
+calll.py
+extracted_reasoning.json
+diagnosis_verifier.py
+trial.py
+trial1.py

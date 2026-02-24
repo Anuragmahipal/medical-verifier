@@ -1,0 +1,31 @@
+{
+  "reasoning_type": "diagnostic inference",
+  "graph": {
+    "entities": [
+      "Urogenital Diaphragm",
+      "Deep Transverse Perineal Muscle",
+      "Perineal Membrane",
+      "Colle's Fascia"
+    ],
+    "causal_relations": [
+      {
+        "cause": "Urogenital Diaphragm is made up of",
+        "effect": "Deep Transverse Perineal Muscle and Perineal Membrane"
+      }
+    ],
+    "observations": [
+      "The urogenital diaphragm is a structure located in the pelvic region."
+    ],
+    "hypotheses": [
+      "Colle's fascia contributes to the formation of the urogenital diaphragm"
+    ],
+    "supports": [],
+    "contradictions": [
+      {
+        "observation": "The perineal membrane is a layer of fascia that provides support and is part of the urogenital diaphragm.",
+        "hypothesis": "Colle's fascia contributes to the formation of the urogenital diaphragm"
+      }
+    ],
+    "final_answer": "Colle's fascia does not contribute to the formation of the urogenital diaphragm"
+  }
+}
