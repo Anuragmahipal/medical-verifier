@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import httpx
 from openai import OpenAI
 import sys
@@ -5,8 +6,8 @@ import os
 import re
 from datetime import datetime
 
-# ---------------- CONFIG ----------------
-MODEL = "mistral:instruct"
+# ---- CONFIG ----
+MODEL = "phi4" # Change to "llama3.2" if you get Out of Memory errors!
 TIMEOUT = 600.0
 OUTPUT_DIR = "atomic_output"
 
@@ -18,28 +19,31 @@ client = OpenAI(
 
 def decompose_step(question, step_text, step_index):
     """
-    Processes a single segment of reasoning to maintain high focus and granularity.
+    Decompose medical text into atomic claims following paper rules.
+    Generic approach works with any medical reasoning text.
     """
-    system_prompt = """You are a Medical Logic Auditor. 
-Your task is to break down a specific medical reasoning step into a numbered list of ATOMIC CLAIMS.
+    system_prompt = """You are a Medical Knowledge Extractor. Your task: Break down medical reasoning text into ATOMIC CLAIMS ONLY.
 
-RULES:
-1. One clinical fact per line.
-2. Do not use pronouns (it, they, she). Use the actual entity names.
-3. Keep the original sequence of the reasoning.
-4. Strict Literalism: Only extract facts that are EXPLICITLY STATED in the text. Do not add medical knowledge. If the text says 'it is a structure,' do not name the structure yourself.
-5. If a line has multiple facts, break it into multiple lines.
-6. Do not include conversational filler (e.g., "The answer is", "Therefore").
-7. Try to break it down as much as possible, even if it seems obvious.
+AN ATOMIC CLAIM IS: A single, independent, verifiable factual sentence.
 
-EXAMPLES:
-Input: "The heart has four chambers and is located in the mediastinum."
-Output:
-1. The heart has four chambers.
-2. The heart is located in the mediastinum."
-"""
+CRITICAL RULES:
+1. ONE FACT PER LINE: Never use conjunctions like "and", "or", "while" to join facts. Split them!
+   ✗ "Cones are in the retina and responsible for color vision."
+   ✓ "Cones are located in the retina." (Line 1)
+   ✓ "Cones are responsible for color vision." (Line 2)
+   
+2. RESOLVE PRONOUNS: Replace "It", "They", "This", or "Which" with the specific medical entity they refer to.
+   ✗ "They are concentrated in the foveola."
+   ✓ "Cones are concentrated in the foveola."
 
-    user_content = f"QUESTION: {question}\n\nREASONING STEP {step_index}: {step_text}"
+3. BE EXHAUSTIVE: Extract every single anatomical, physiological, and clinical fact. Do not summarize.
+
+4. NO INFERENCE: Extract exactly what the text states. Do not add external knowledge here.
+
+OUTPUT FORMAT:
+Output exactly one atomic claim per line. Do not number the lines. Do not add introductory text."""
+
+    user_content = f"QUESTION: {question}\n\nTEXT:\n{step_text}"
 
     try:
         response = client.chat.completions.create(
@@ -54,16 +58,76 @@ Output:
     except Exception as e:
         return f"Error in Step {step_index}: {str(e)}"
 
+def extract_atomic_claims(medical_text, question=""):
+    """
+    Extract atomic claims from ANY medical reasoning text.
+    Generic function works with diverse medical sources.
+    """
+    # Split text into logical chunks
+    chunks = re.split(r'\n\n+|(?=\d+\.)', medical_text.strip())
+
+    all_claims = []
+
+    for i, chunk in enumerate(chunks, 1):
+        if not chunk.strip():
+            continue
+
+        atomic_segment = decompose_step(question, chunk.strip(), i)
+
+        # Parse output from LLM
+        lines = atomic_segment.split('\n')
+        for line in lines:
+            line = line.strip()
+
+            # Skip empty lines
+            if not line:
+                continue
+
+            # Skip section headers and meta-comments
+            if any(line.upper().startswith(h) for h in [
+                'INPUT:', 'OUTPUT:', 'STEP ', 'SECTION', 'NOTE:',
+                'EXPLANATION:', 'ANSWER:', 'EXAMPLE'
+            ]):
+                continue
+
+            # Skip uncertain/meta statements
+            if any(p in line.lower() for p in [
+                'to find', 'additional information', 'we determine',
+                'cannot be', 'unclear', 'unknown', 'insufficient'
+            ]):
+                continue
+
+            # Remove numbering (1. , 2. , - , *) if the LLM adds it anyway
+            clean_line = re.sub(r'^[\d\.\-\*\s]+', '', line).strip()
+
+            if not clean_line or len(clean_line) < 5:
+                continue
+
+            all_claims.append(clean_line)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_claims = []
+    for claim in all_claims:
+        claim_lower = claim.lower()
+        if claim_lower not in seen:
+            seen.add(claim_lower)
+            unique_claims.append(claim)
+
+    return unique_claims
+
+
 def save_output(full_content):
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filepath = os.path.join(OUTPUT_DIR, f"sequential_{timestamp}.txt")
 
     with open(filepath, "w") as f:
         f.write(full_content)
     return filepath
+
 
 def multiline_input(prompt):
     print(prompt)
@@ -75,36 +139,28 @@ def multiline_input(prompt):
     except EOFError:
         return "\n".join(lines)
 
-# ---------------- MAIN ----------------
+
 if __name__ == "__main__":
-    print("--- Module A: Sequential Medical Fact Decomposer ---")
-    
-    q = multiline_input("Enter the Medical Question: ")
-    r_full = multiline_input("Paste the Reasoning Steps (Numbered 1, 2, 3...): ")
+    print("=== Medical Reasoning Analyzer ===\n")
 
-    # Regex to split by numbers (1. , 2. ) or the word "Conclusion:"
-    # This ensures each paragraph/step is a separate item in the list
-    steps = re.split(r'\n(?=\d+\.|\bConclusion:)', r_full.strip())
-    
-    final_output_parts = [f"QUESTION: {q}\n", "="*40]
-    
-    print(f"\nDetected {len(steps)} segments. Starting sequential processing...")
+    try:
+        q = input("Enter medical question (or press Enter to skip): ").strip()
 
-    for i, step in enumerate(steps, 1):
-        if not step.strip(): continue
-        
-        print(f"Processing Segment {i}...")
-        atomic_segment = decompose_step(q, step.strip(), i)
-        
-        # Formatting for the final text file
-        final_output_parts.append(f"\n[ORIGINAL STEP {i}]:\n{step.strip()}")
-        final_output_parts.append(f"\n[ATOMIC CLAIMS]:\n{atomic_segment}")
-        final_output_parts.append("-" * 30)
+        r_full = multiline_input("Paste medical reasoning text:")
+        if not r_full.strip():
+            print("Error: Reasoning cannot be empty.")
+            exit(1)
 
-    # Combine everything and save
-    full_report = "\n".join(final_output_parts)
-    saved_path = save_output(full_report)
-    
-    print(f"\n✅ Success! Sequential atomic claims saved to: {saved_path}")
-    print("\n--- PREVIEW ---")
-    print(full_report[:600] + "...")
+        # Process the text
+        claims = extract_atomic_claims(r_full, q)
+
+        print(f"\n✓ Extracted {len(claims)} atomic claims\n")
+        for i, claim in enumerate(claims, 1):
+            print(f"{i}. {claim}")
+
+    except KeyboardInterrupt:
+        print("\n\nCancelled.")
+        exit(1)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        exit(1)

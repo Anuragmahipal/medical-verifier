@@ -28,3 +28,41 @@ Drug commonly used in t/t of endometriosis -
 
 Conclusion:
 GnRH analogues, such as Leuprolide and Nafarelin, are commonly used in the treatment of endometriosis. Gonadorelin, while related, is not typically used as a treatment for endometriosis. Therefore, the answer should focus on the use of GnRH analogues like Leuprolide and Nafarelin for managing endometriosis symptoms.
+
+
+Cones are photoreceptor cells in the retina responsible for color vision. They
+are concentrated in the foveola, which is the central part of the retina. There
+are three types of cone pigments: cyanolabe, erythrolabe, and chlorolabe, each
+sensitive to different wavelengths of light, allowing for the perception of a wide
+range of colors. Rods, on the other hand, are more sensitive to low light levels
+and are primarily responsible for night vision This is the process by which the
+eyes adjust from bright light conditions to low light conditions. It involves a
+transition from cone-dominated vision to rod-dominated vision. In bright light,
+cones are primarily active, but as light diminishes, rods take over to allow for
+vision in dim conditions The primary visual cortex and visual association cortex
+are involved in processing visual information, including color perception. The
+lateral geniculate body is part of the visual pathway that relays information from
+the retina to the visual cortex. The visual information processed by the cones
+is transmitted through the lateral geniculate body to the primary visual cortex,
+where it is interpreted as color. The visual association cortex further processes
+this information to integrate it with other sensory inputs and cognitive functions.
+
+7,133
+	
+Child with Type I Diabetes. What is the advised time for fundus examinations from the time of diagnosis?
+
+**Reasoning Process:**
+
+1. **Understanding Diabetic Retinopathy:** Diabetic retinopathy is a complication of diabetes that affects the eyes. It is caused by damage to the blood vessels of the light-sensitive tissue at the back of the eye (retina). Monitoring for diabetic retinopathy is crucial to prevent visual loss.
+
+2. **Type 1 Diabetes Mellitus and Retinopathy Risk:** In Type 1 Diabetes Mellitus, the risk of developing diabetic retinopathy is related to the duration of diabetes. The longer a person has diabetes, the higher the risk of developing retinopathy.
+
+3. **Guidelines for Fundus Examination in Type 1 Diabetes:** According to established medical guidelines, children with Type 1 Diabetes should have their first fundus examination 5 years after the diagnosis of diabetes. This is because significant retinopathy is unlikely to develop before this time frame in children.
+
+4. **Comparison with Type 2 Diabetes Mellitus:** In contrast, individuals with Type 2 Diabetes Mellitus are often diagnosed later in life and may have had undiagnosed diabetes for some time. Therefore, the recommendation is to have a fundus examination at the time of diagnosis to assess any existing retinopathy.
+
+5. **Pediatric Considerations:** For children with Type 1 Diabetes, the focus is on monitoring and preventing complications as they grow. The timing of the first fundus examination is aligned with the expected onset of retinopathy risk.
+
+**Conclusion:**
+
+The advised time for the first fundus examination in a child with Type 1 Diabetes Mellitus is 5 years after the diagnosis. This timing is based on the understanding that the risk of developing significant diabetic retinopathy increases with the duration of diabetes, and early screening helps in timely intervention.
