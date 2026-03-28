@@ -45,7 +45,6 @@ ADMISSIBILITY = {
 
     "entails": {
         "Structure": ["Condition"], # REMOVED "Function" to enforce "Structures enable, they don't entail"
-        "Function": ["Condition"],
         "Process": ["Process", "Condition","Symptom","Disease"], 
         "Condition": ["Process","Condition","Symptom","Disease"],
         "Disease": ["Process","Condition","Symptom","Disease"]
