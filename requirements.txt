@@ -1,0 +1,7 @@
+requests
+networkx
+matplotlib 
+spacy 
+scispacy 
+numpy
+openai

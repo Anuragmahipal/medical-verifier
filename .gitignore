@@ -1,5 +1,4 @@
-# Ignore these files and directories
-
+venv
 logic_reports
 reasoning_graphs
 atomic_output

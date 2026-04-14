@@ -16,7 +16,46 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 # --- THE ADVANCED SYNTACTIC CLASSIFIER CLASS ---
 class MedicalOntologyClassifier:
+
+    """
+    Classifies medical entities into ontology types:
+    {Structure, Process, Condition, Function, Symptom, Disease}.
+
+    The classification follows a hybrid pipeline:
+
+    1. NLP-based heuristics (verbs, action nouns → Process)
+    2. Pharmacology heuristics (drug detection → Structure)
+    3. UMLS lookup via SciSpacy (high-confidence mapping)
+    4. LLM fallback ("oracle") for unknown terms
+
+    This layered approach ensures:
+    - Speed (heuristics first)
+    - Accuracy (UMLS grounding)
+    - Coverage (LLM fallback)
+
+    Attributes:
+        nlp: SciSpacy pipeline with UMLS linker
+        linker: UMLS entity linker
+        client: LLM client (Ollama / OpenAI-compatible)
+        model: LLM model name
+        cache: Stores previously classified entities for efficiency
+    """
+
     def __init__(self, llm_client, model_name):
+        """
+        Initializes the classifier by loading:
+        - SciSpacy model (en_core_sci_sm)
+        - UMLS entity linker
+
+        Args:
+            llm_client: Client used to query LLM (acts as fallback classifier)
+            model_name: Name of the LLM model (e.g., "phi4", "llama3")
+
+        Note:
+            First-time initialization may take time due to UMLS data loading (~500MB).
+        """
+
+
         print("Loading Medical Ontology Database (UMLS) and Dependency Parser...")
         self.nlp = spacy.load("en_core_sci_sm")
         self.nlp.add_pipe("scispacy_linker", config={"resolve_abbreviations": True, "linker_name": "umls"})
@@ -63,6 +102,28 @@ class MedicalOntologyClassifier:
             return "Condition"
 
     def classify(self, entity_text, fallback_type="Condition"):
+        """
+        Classifies a medical entity into a predefined ontology type.
+
+        Pipeline:
+            1. Cache lookup (fastest path)
+            2. Dependency parsing (identify root token)
+            3. NLP heuristics (verbs/action nouns → Process)
+            4. Drug detection heuristics → Structure
+            5. UMLS lookup (via SciSpacy linker)
+            6. LLM fallback (oracle)
+
+        Args:
+            entity_text (str): Input medical entity
+            fallback_type (str): Default type if classification fails
+
+        Returns:
+            str: Classified ontology type
+
+        Notes:
+            - Uses root token for semantic classification
+            - Caches results to avoid recomputation
+        """
         entity_text = str(entity_text).strip()
         if not entity_text:
             return fallback_type
