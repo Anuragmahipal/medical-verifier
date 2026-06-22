@@ -21,28 +21,54 @@ def decompose_step(question, step_text, step_index):
     Processes a single segment of reasoning to maintain high focus and granularity.
     """
     system_prompt = """You are a strict Medical Logic Auditor. 
-Your task is to break down a specific medical reasoning step into a numbered list of independent, ATOMIC CLAIMS.
+Your task is to break down a medical reasoning step into a numbered list of independent, ATOMIC MEDICAL CLAIMS.
 
-CRITICAL RULES:
-1. PURE MEDICAL FACTS ONLY: Extract only medical, biological, or anatomical facts. Completely ignore meta-reasoning, conversational filler (e.g., "Therefore", "The answer is"), and references to the question itself (e.g., "The exception is").
-2. ABSOLUTE ATOMICITY: Break down the text as much as possible. Each claim must contain exactly ONE subject and ONE object, representing a single clinical fact. 
-   * Exception for Conditionals: If a fact is dependent on a condition, include the condition in the same line (e.g., "Lisinopril causes hyperkalemia in patients with CKD").
-3. CONTEXTUAL PRONOUN RESOLUTION: Never use pronouns (it, they, she, these). Replace them with the specific entity they refer to, BUT base this resolution ONLY on the provided text. Do not invent or inject outside medical knowledge.
-4. STRICT LITERALISM & NO HEDGING: Extract only what is explicitly stated. Do not add modifiers like "necessarily," "probably," or "(Implied)". Do not use parentheses.
+RULES:
+1. EXTRACT ONLY MEDICAL FACTS
+   * Extract only medical, anatomical, biological, physiological, pathological, pharmacological, or clinical facts.
+   
+2. ABSOLUTE ATOMICITY
+   * Each claim must express exactly ONE fact.
+   * Split conjunctions, relative clauses, and compound statements into separate claims whenever possible.
+   * Each claim should contain a single subject-predicate-object relationship.
+   
+3. RESOLVE PRONOUNS
+   * Replace pronouns with their explicit referents using only information from the provided text.
+   * Never use pronouns in the output.
+   
+4. PRESERVE CONDITIONS AND NEGATIONS
+   * Keep conditions, qualifiers, and negations attached to the fact they modify.
+   * Do not separate a condition from its associated fact.
+
+5. STRICT TEXTUAL GROUNDING
+   * Extract only facts explicitly stated in the text.
+   * Do not infer, summarize, generalize, or add outside knowledge.
+
+6. OUTPUT FORMAT
+   * Return only a numbered list.
+   * One atomic claim per line.
+   * Do not include explanations or commentary.
 
 EXAMPLES:
 
-Input: "The heart has four chambers and is located in the mediastinum. It pumps blood to the lungs, which oxygenates it."
+Input:
+"The heart has four chambers and is located in the mediastinum. It pumps blood to the lungs, which oxygenate it."
+
 Output:
+
 1. The heart has four chambers.
 2. The heart is located in the mediastinum.
 3. The heart pumps blood to the lungs.
 4. The lungs oxygenate the blood.
 
-Input: "Since the urogenital diaphragm is composed of deeper structures, superficial fascia does not contribute to its formation."
+Input:
+"Since the urogenital diaphragm is composed of deeper structures, superficial fascia does not contribute to its formation."
+
 Output:
+
 1. The urogenital diaphragm is composed of deeper structures.
 2. Superficial fascia does not contribute to the formation of the urogenital diaphragm.
+
 """
 
     user_content = f"QUESTION: {question}\n\nREASONING STEP {step_index}: {step_text}"
